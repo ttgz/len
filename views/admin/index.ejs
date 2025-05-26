@@ -327,6 +327,24 @@
             let editingProductId = null;
             let editingVariantId = null;
 
+            // Hàm helper để lấy file từ input (bao gồm cả drag & drop)
+            function getFileFromInput(inputElement) {
+                const $input = $(inputElement);
+
+                // Thử lấy file từ input.files trước
+                if ($input[0].files && $input[0].files.length > 0) {
+                    return $input[0].files[0];
+                }
+
+                // Nếu không có, thử lấy từ data (drag & drop fallback)
+                const draggedFile = $input.data('draggedFile');
+                if (draggedFile) {
+                    return draggedFile;
+                }
+
+                return null;
+            }
+
             // Image upload handlers
             function setupImageUpload(uploadAreaId, fileInputId, previewId, previewImgId, removeId) {
                 const uploadArea = $(`#${uploadAreaId}`);
@@ -335,11 +353,14 @@
                 const previewImg = $(`#${previewImgId}`);
                 const removeBtn = $(`#${removeId}`);
 
-                uploadArea.click(() => fileInput.click());
+                // Xóa tất cả event listeners cũ để tránh memory leak
+                uploadArea.off('click dragover dragleave drop');
+                fileInput.off('change');
+                removeBtn.off('click');
 
-                fileInput.change(function (e) {
-                    const file = e.target.files[0];
-                    if (file) {
+                // Hàm hiển thị ảnh preview
+                function displayImage(file) {
+                    if (file && file.type.startsWith('image/')) {
                         const reader = new FileReader();
                         reader.onload = function (e) {
                             previewImg.attr('src', e.target.result);
@@ -348,35 +369,68 @@
                         };
                         reader.readAsDataURL(file);
                     }
+                }
+
+                // Click to upload
+                uploadArea.on('click', function () {
+                    fileInput.click();
                 });
 
-                removeBtn.click(function () {
+                // File input change
+                fileInput.on('change', function (e) {
+                    const file = e.target.files[0];
+                    displayImage(file);
+                });
+
+                // Remove image
+                removeBtn.on('click', function () {
                     fileInput.val('');
+                    fileInput.removeData('draggedFile'); // Xóa cả dragged file
                     preview.hide();
                     uploadArea.show();
                 });
 
-                // Drag and drop
+                // Drag and drop events
                 uploadArea.on('dragover', function (e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     $(this).addClass('dragover');
                 });
 
                 uploadArea.on('dragleave', function (e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     $(this).removeClass('dragover');
                 });
 
                 uploadArea.on('drop', function (e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     $(this).removeClass('dragover');
 
                     const files = e.originalEvent.dataTransfer.files;
                     if (files.length > 0) {
                         const file = files[0];
                         if (file.type.startsWith('image/')) {
-                            fileInput[0].files = files;
-                            fileInput.trigger('change');
+                            // QUAN TRỌNG: Gán file vào input để có thể gửi lên server
+                            try {
+                                // Tạo FileList mới và gán vào input
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                fileInput[0].files = dataTransfer.files;
+
+                                // Hiển thị preview
+                                displayImage(file);
+                            } catch (error) {
+                                // Fallback cho trình duyệt không support DataTransfer
+                                console.log('DataTransfer not supported, using alternative method');
+
+                                // Chỉ hiển thị preview, file sẽ được xử lý thủ công
+                                displayImage(file);
+
+                                // Lưu file vào thuộc tính data để có thể truy cập sau
+                                fileInput.data('draggedFile', file);
+                            }
                         }
                     }
                 });
@@ -406,27 +460,27 @@
                     const imageUrl = product.image ? `/uploads/${product.image}` : 'https://via.placeholder.com/300x200?text=No+Image';
 
                     const productCard = `
-                        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                            <div class="card product-card h-100">
-                                <img src="${product.image}" class="card-img-top product-image" alt="${product.name}">
-                                <div class="card-body">
-                                    <h5 class="card-title">${product.name}</h5>
-                                    <p class="card-text price-text fs-5">${product.price.toLocaleString('vi-VN')}đ</p>
-                                    <div class="d-flex justify-content-between">
-                                        <button class="btn btn-outline-primary btn-sm" onclick="editProduct(${product.id})">
-                                            <i class="fas fa-edit me-1"></i>Sửa
-                                        </button>
-                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteProduct(${product.id})">
-                                            <i class="fas fa-trash me-1"></i>Xóa
-                                        </button>
-                                    </div>
-                                    <button class="btn btn-info w-100 mt-2" onclick="manageVariants(${product.id}, '${product.name}')">
-                                        <i class="fas fa-list me-2"></i>Quản lý biến thể
+                    <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                        <div class="card product-card h-100">
+                            <img src="${product.image}" class="card-img-top product-image" alt="${product.name}">
+                            <div class="card-body">
+                                <h5 class="card-title">${product.name}</h5>
+                                <p class="card-text price-text fs-5">${product.price.toLocaleString('vi-VN')}đ</p>
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="editProduct(${product.id})">
+                                        <i class="fas fa-edit me-1"></i>Sửa
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteProduct(${product.id})">
+                                        <i class="fas fa-trash me-1"></i>Xóa
                                     </button>
                                 </div>
+                                <button class="btn btn-info w-100 mt-2" onclick="manageVariants(${product.id}, '${product.name}')">
+                                    <i class="fas fa-list me-2"></i>Quản lý biến thể
+                                </button>
                             </div>
                         </div>
-                    `;
+                    </div>
+                `;
                     grid.append(productCard);
                 });
             }
@@ -445,55 +499,55 @@
 
                 if (variants.length === 0) {
                     container.html(`
-                        <div class="text-center py-5">
-                            <i class="fas fa-box-open fs-1 text-muted mb-3"></i>
-                            <h5>Chưa có biến thể nào</h5>
-                            <p class="text-muted">Hãy thêm biến thể đầu tiên!</p>
-                        </div>
-                    `);
+                    <div class="text-center py-5">
+                        <i class="fas fa-box-open fs-1 text-muted mb-3"></i>
+                        <h5>Chưa có biến thể nào</h5>
+                        <p class="text-muted">Hãy thêm biến thể đầu tiên!</p>
+                    </div>
+                `);
                     return;
                 }
 
                 let tableHtml = `
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Hình ảnh</th>
-                                    <th>Tên biến thể</th>
-                                    <th>Giá</th>
-                                    <th width="120">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Hình ảnh</th>
+                                <th>Tên biến thể</th>
+                                <th>Giá</th>
+                                <th width="120">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
 
                 variants.forEach(variant => {
                     const imageUrl = variant.image ? `/uploads/${variant.image}` : 'https://via.placeholder.com/60x60?text=No+Image';
                     tableHtml += `
-                        <tr>
-                            <td>
-                                <img src="${imageUrl}" class="variant-image" alt="${variant.name}">
-                            </td>
-                            <td>${variant.name}</td>
-                            <td class="price-text">${variant.price.toLocaleString('vi-VN')}đ</td>
-                            <td>
-                                <button class="btn btn-outline-primary btn-sm me-1" onclick="editVariant(${variant.id})">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="deleteVariant(${variant.id})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+                    <tr>
+                        <td>
+                            <img src="${imageUrl}" class="variant-image" alt="${variant.name}">
+                        </td>
+                        <td>${variant.name}</td>
+                        <td class="price-text">${variant.price.toLocaleString('vi-VN')}đ</td>
+                        <td>
+                            <button class="btn btn-outline-primary btn-sm me-1" onclick="editVariant(${variant.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteVariant(${variant.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
                 });
 
                 tableHtml += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+                        </tbody>
+                    </table>
+                </div>
+            `;
 
                 container.html(tableHtml);
             }
@@ -511,7 +565,7 @@
 
                         // Show existing image if available
                         if (product.image) {
-                            $('#previewImgEdit').attr('src', `/uploads/${product.image}`);
+                            $('#previewImgEdit').attr('src', `${product.image}`);
                             $('#imagePreviewEdit').show();
                             $('#uploadAreaEdit').hide();
                         }
@@ -530,8 +584,7 @@
                             alert('Đã xóa vĩnh viễn sản phẩm thành công');
                             reRender();
                         }
-                    })
-
+                    });
                 }
             };
 
@@ -579,6 +632,7 @@
                 $('#productPrice').val('');
                 $('#seo').val('');
                 $('#productImage').val('');
+                $('#productImage').removeData('draggedFile');
                 $('#imagePreview').hide();
                 $('#uploadArea').show();
             });
@@ -587,7 +641,7 @@
                 const name = $('#productName').val().trim();
                 const price = parseInt($('#productPrice').val()) || 0;
                 const seo = $('#seo').val();
-                const image = $('#productImage')[0].files[0];
+                const image = getFileFromInput('#productImage'); // Sử dụng helper function
 
                 if (!name || price <= 0) {
                     alert('Vui lòng điền đầy đủ thông tin sản phẩm!');
@@ -598,7 +652,10 @@
                 formData.append('name', name);
                 formData.append('price', price);
                 formData.append('search', seo);
-                if (image) formData.append('image', image);
+                if (image) {
+                    formData.append('image', image);
+                    console.log('File to upload:', image.name, image.size); // Debug log
+                }
 
                 $.ajax({
                     url: '/admin/products',
@@ -610,6 +667,10 @@
                         alert('Thêm thành công');
                         $('#productModal').modal('hide');
                         reRender();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Upload error:', error);
+                        alert('Có lỗi xảy ra khi thêm sản phẩm');
                     }
                 });
             });
@@ -618,7 +679,7 @@
                 const name = $('#productNameEdit').val().trim();
                 const price = parseInt($('#productPriceEdit').val()) || 0;
                 const seo = $('#seoEdit').val();
-                const image = $('#productImageEdit')[0].files[0];
+                const image = getFileFromInput('#productImageEdit'); // Sử dụng helper function
                 const id = $('#productId').val();
 
                 if (!name || price <= 0) {
@@ -631,7 +692,10 @@
                 formData.append('name', name);
                 formData.append('price', price);
                 formData.append('search', seo);
-                if (image) formData.append('image', image);
+                if (image) {
+                    formData.append('image', image);
+                    console.log('File to upload:', image.name, image.size); // Debug log
+                }
 
                 $.ajax({
                     url: '/admin/products/' + id,
@@ -643,6 +707,10 @@
                         alert('Sửa thành công');
                         $('#productEditModal').modal('hide');
                         reRender();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Upload error:', error);
+                        alert('Có lỗi xảy ra khi cập nhật sản phẩm');
                     }
                 });
             });
@@ -653,6 +721,7 @@
                 $('#variantName').val('');
                 $('#variantPrice').val('');
                 $('#variantImage').val('');
+                $('#variantImage').removeData('draggedFile');
                 $('#imagePreviewVariant').hide();
                 $('#uploadAreaVariant').show();
                 $('#variantFormModal').modal('show');
@@ -661,17 +730,40 @@
             $('#saveVariantBtn').click(function () {
                 const name = $('#variantName').val().trim();
                 const price = parseInt($('#variantPrice').val()) || 0;
-                const image = $('#variantImage')[0].files[0];
+                const image = getFileFromInput('#variantImage'); // Sử dụng helper function
 
                 if (!name || price <= 0) {
                     alert('Vui lòng điền đầy đủ thông tin biến thể!');
                     return;
                 }
 
-                // Save variant logic here
-                alert('Lưu biến thể thành công!');
-                $('#variantFormModal').modal('hide');
-                renderVariantsTable(currentProduct.id);
+                // Tạo FormData để gửi cả file và data
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('price', price);
+                formData.append('productId', currentProduct.id);
+                if (image) {
+                    formData.append('image', image);
+                    console.log('Variant file to upload:', image.name, image.size); // Debug log
+                }
+
+                // TODO: Thay đổi URL và method theo API của bạn
+                $.ajax({
+                    url: '/admin/variants',
+                    method: 'POST',
+                    contentType: false,
+                    processData: false,
+                    data: formData,
+                    success: function () {
+                        alert('Lưu biến thể thành công!');
+                        $('#variantFormModal').modal('hide');
+                        renderVariantsTable(currentProduct.id);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Variant upload error:', error);
+                        alert('Có lỗi xảy ra khi lưu biến thể');
+                    }
+                });
             });
 
             // Import/Export handlers
@@ -714,6 +806,7 @@
                     }
                 });
             }
+
             reRender();
         });
     </script>

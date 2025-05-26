@@ -56,11 +56,11 @@ app.use('/admin', authRouter);
 
 
 
-app.listen(port, async () => {
+app.listen(80, async () => {
     try {
         console.log(process.env.APP_URL);
         await sequelize.sync(); // Sync DB nếu cần
-        console.log('Server chạy tại http://localhost:3000');
+        console.log('Server chạy tại http://localhost');
     } catch (err) {
         console.error('Lỗi kết nối DB:', err);
     }

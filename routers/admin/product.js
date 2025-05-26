@@ -40,14 +40,16 @@ router.post('/products', upload.single('image'), async (req, res) => {
 
 router.put('/products/:id', upload.single('image'), async (req, res) => {
     try {
-        if (req.file) {
-            fileName = '/public/images/' + req.file.filename;
-            await Product.update({ image: 'public/images/' + fileName }, { where: { id: req.body.id } });
-        }
+
         const data = {
             name: req.body.name,
             price: req.body.price,
             search: req.body.search,
+        }
+        if (req.file) {
+            console.log(req.file);
+            fileName = '/public/images/' + req.file.filename;
+            data.image = fileName
         }
         await Product.update(data, { where: { id: req.body.id } });
         res.status(200).json('message', 'cập nhật thành công');
@@ -65,7 +67,7 @@ router.delete('/products/:id', async (req, res) => {
                 id: id
             }
         });
-        res.status(200).json({message: 'Xóa thành công'});
+        res.status(200).json({ message: 'Xóa thành công' });
     } catch (e) {
         console.log(e);
         res.status(500).json({ error: 'Lỗi hệ thống' });
