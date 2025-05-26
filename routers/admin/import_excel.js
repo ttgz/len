@@ -25,8 +25,8 @@ router.post('/import-excel', upload.single('file'), async (req, res) => {
         worksheet.eachRow((row, rowNumber) => {
             if (rowNumber === 1) return; // bỏ qua dòng tiêu đề
 
-            const [stt, name, price] = row.values.slice(1); // bỏ index 0
-            imported.push({ name, price });
+            const [stt, name, price, search] = row.values.slice(1); // bỏ index 0
+            imported.push({ name, price, search });
         });
 
         // Lưu vào DB (giả sử bạn dùng Sequelize)

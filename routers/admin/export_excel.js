@@ -15,7 +15,8 @@ router.get('/download-excel', async (req, res) => {
         worksheet.columns = [
             { header: 'ID', key: 'id', width: 10 },
             { header: 'Tên sản phẩm', key: 'name', width: 30 },
-            { header: 'Giá', key: 'price', width: 20 }
+            { header: 'Giá', key: 'price', width: 20 },
+            { header: 'Chuẩn hóa tìm kiếm', key: 'search', width: 50 }
         ];
 
         const data = await Product.findAll();
@@ -27,7 +28,8 @@ router.get('/download-excel', async (req, res) => {
             worksheet.addRow({
                 id: item.id,
                 name: item.name,
-                price: item.price
+                price: item.price,
+                search: item.search
             });
         });
 
