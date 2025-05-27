@@ -1,12 +1,9 @@
 const Product = require('../../models/product');
 const Variant = require('../..//models/variant');
-
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-
-
 
 
 const storage = multer.diskStorage({
@@ -21,63 +18,69 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-
-router.post('/products', upload.single('image'), async (req, res) => {
-    console.log(req.body.name, req.file.filename);
+router.post('/', upload.single('image'), async (req, res) => {
+    console.log(req.params.id);
+    console.log(req.body);
+    console.log(req.file);
     try {
         const data = {
             name: req.body.name,
             price: req.body.price,
-            search: req.body.search,
-            image: '/public/images/' + req.file.filename
+            product_id: req.body.productId,
+            image: req.file ? '/public/images/' + req.file.filename : null,
         }
-        const product = await Product.create(data);
-        if (product)
-            res.status(201).json('message', 'thêm sản phẩm thành công');
+        await Variant.create(data);
+        res.status(201).json({ message: 'Thêm biến thể thành công' });
     } catch (e) {
         console.log(e);
-        res.status(500).json('error', 'Lỗi hệ thống');
+        res.status(500).json({ error: 'Lỗi hệ thống' });
     }
 });
 
 
-router.put('/products/:id', upload.single('image'), async (req, res) => {
+router.put('/:id', upload.single('image'), async (req, res) => {
+
     try {
 
         const data = {
             name: req.body.name,
             price: req.body.price,
-            search: req.body.search,
         }
         if (req.file) {
             console.log(req.file);
             fileName = '/public/images/' + req.file.filename;
             data.image = fileName
         }
-        await Product.update(data, { where: { id: req.body.id } });
-        res.status(200).json('message', 'cập nhật thành công');
+        await Variant.update(data, { where: { id: req.params.id } });
+        res.status(200).json('message', 'cập nhật biến thể thành công');
     } catch (e) {
         console.log(e);
         res.status(500).json({ 'error': 'lỗi hệ thống' });
     }
 });
 
-router.delete('/products/:id', async (req, res) => {
+
+router.get('/:id', async (req, res) => {
     try {
-        const id = req.params.id
-
-        await Variant.destroy({
-            where: { product_id: id }
-        });
-
-        await Product.destroy({
-            where: { id }
-        });
-
-        res.status(200).json({ message: 'Xóa thành công' });
+        const id = req.params.id;
+        const variant = await Variant.findByPk(id);
+        res.status(200).json(variant);
     } catch (e) {
         console.log(e);
-        res.status(500).json({ error: 'Lỗi hệ thống' });
+        res.status(500).json({ message: 'lỗi hệ thống' });
+    }
+});
+
+router.delete('/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        await Variant.destroy({
+            where: { id }
+        });
+        res.status(200).json({ message: 'Xóa biến thể thành công' });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({ message: 'lỗi hệ thống' });
     }
 });
 

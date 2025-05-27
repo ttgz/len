@@ -1,0 +1,38 @@
+<script>
+    $(document).ready(function () {
+        // Sidebar toggle
+        $('#sidebarToggle').click(function () {
+            const sidebar = $('#sidebar');
+            const mainContent = $('#mainContent');
+
+            if (window.innerWidth > 768) {
+                sidebar.toggleClass('collapsed');
+                mainContent.toggleClass('expanded');
+            } else {
+                sidebar.toggleClass('show');
+            }
+        });
+
+        // Menu navigation
+        $('.menu-item').click(function (e) {
+            e.preventDefault();
+            $('.menu-item').removeClass('active');
+            $(this).addClass('active');
+
+            const page = $(this).data('page');
+            window.location.href = $(this).attr('href');
+            // Handle navigation here
+            console.log('Navigate to:', page);
+        });
+
+
+        // Close sidebar when clicking outside on mobile
+        $(document).click(function (e) {
+            if (window.innerWidth <= 768) {
+                if (!$(e.target).closest('#sidebar, #sidebarToggle').length) {
+                    $('#sidebar').removeClass('show');
+                }
+            }
+        });
+    });
+</script>

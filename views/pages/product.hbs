@@ -1,0 +1,937 @@
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <!-- Search and Filters -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="searchInput" class="form-control"
+                            placeholder="Tìm kiếm sản phẩm, thương hiệu...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-primary" id="addProductBtn">
+                    <i class="fas fa-plus me-2"></i>Thêm sản phẩm
+                </button>
+                <button class="btn btn-success" id="importBtn">
+                    <i class="fas fa-upload me-2"></i>Import Excel
+                </button>
+                <button class="btn btn-warning" id="exportBtn">
+                    <i class="fas fa-download me-2"></i>Export Excel
+                </button>
+
+                <button class="btn btn-success" id="importVariantsBtn">
+                    <i class="fas fa-upload me-2"></i>Import Excel Biến thể
+                </button>
+            </div>
+ 
+            
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div id="productsGrid" class="row">
+        <!-- Products will be rendered here -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+        <i class="fas fa-box fs-1 mb-3"></i>
+        <h4>Không tìm thấy sản phẩm nào</h4>
+        <p class="text-muted">Hãy thử thay đổi từ khóa tìm kiếm hoặc thêm sản phẩm mới</p>
+    </div>
+</div>
+
+{{#section "bottom" }}
+<!-- Product Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalTitle">Thêm sản phẩm mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Tên sản phẩm *</label>
+                            <input type="text" id="productName" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Giá (VNĐ) *</label>
+                            <input type="number" id="productPrice" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Chuẩn hóa tìm kiếm</label>
+                            <textarea class="form-control" id="seo" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Hình ảnh sản phẩm</label>
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt fs-2 text-muted mb-2"></i>
+                            <p class="mb-2">Kéo thả hoặc click để chọn ảnh</p>
+                            <input type="file" id="productImage" class="d-none" accept="image/*">
+                        </div>
+                        <div id="imagePreview" class="mt-3" style="display: none;">
+                            <img id="previewImg" class="image-preview" alt="Preview">
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeImage">
+                                <i class="fas fa-trash"></i> Xóa ảnh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveProductBtn">
+                    <i class="fas fa-save me-2"></i>Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Edit Modal -->
+<div class="modal fade" id="productEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chỉnh sửa sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Tên sản phẩm *</label>
+                            <input type="text" id="productNameEdit" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Giá (VNĐ) *</label>
+                            <input type="number" id="productPriceEdit" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Chuẩn hóa tìm kiếm</label>
+                            <textarea class="form-control" id="seoEdit" rows="3"></textarea>
+                        </div>
+                        <input type="hidden" id="productId">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Hình ảnh sản phẩm</label>
+                        <div class="upload-area" id="uploadAreaEdit">
+                            <i class="fas fa-cloud-upload-alt fs-2 text-muted mb-2"></i>
+                            <p class="mb-2">Kéo thả hoặc click để chọn ảnh</p>
+                            <input type="file" id="productImageEdit" class="d-none" accept="image/*">
+                        </div>
+                        <div id="imagePreviewEdit" class="mt-3" style="display: none;">
+                            <img id="previewImgEdit" class="image-preview" alt="Preview">
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeImageEdit">
+                                <i class="fas fa-trash"></i> Xóa ảnh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveEditProductBtn">
+                    <i class="fas fa-save me-2"></i>Lưu thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Variant Modal -->
+<div class="modal fade" id="variantModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="variantModalTitle">Quản lý biến thể</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Danh sách biến thể</h6>
+                    <button class="btn btn-primary btn-sm" id="addVariantBtn">
+                        <i class="fas fa-plus me-2"></i>Thêm biến thể
+                    </button>
+                </div>
+                <div id="variantsTableContainer">
+                    <!-- Variants table will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Variant Form Modal -->
+<div class="modal fade" id="variantFormModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="variantFormTitle">Thêm biến thể mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Tên biến thể *</label>
+                            <input type="text" id="variantName" class="form-control" placeholder="VD: Màu đỏ">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Giá (VNĐ) *</label>
+                            <input type="number" id="variantPrice" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Hình ảnh biến thể</label>
+                        <div class="upload-area" id="uploadAreaVariant">
+                            <i class="fas fa-image fs-2 text-muted mb-2"></i>
+                            <p class="mb-2">Chọn ảnh biến thể</p>
+                            <input type="file" id="variantImage" class="d-none" accept="image/*">
+                        </div>
+                        <div id="imagePreviewVariant" class="mt-3" style="display: none;">
+                            <img id="previewImgVariant" class="image-preview" alt="Preview">
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeImageVariant">
+                                <i class="fas fa-trash"></i> Xóa ảnh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveVariantBtn">
+                    <i class="fas fa-save me-2"></i>Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Variant Edit Form Modal -->
+<div class="modal fade" id="variantEditFormModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="variantFormTitle">Thêm biến thể mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Tên biến thể *</label>
+                            <input type="text" id="variantEditName" class="form-control" placeholder="VD: Màu đỏ">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Giá (VNĐ) *</label>
+                            <input type="number" id="variantEditPrice" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Hình ảnh biến thể</label>
+                        <div class="upload-area" id="uploadEditAreaVariant">
+                            <i class="fas fa-image fs-2 text-muted mb-2"></i>
+                            <p class="mb-2">Chọn ảnh biến thể</p>
+                            <input type="file" id="variantEditImage" class="d-none" accept="image/*">
+                        </div>
+                        <div id="imageEditPreviewVariant" class="mt-3" style="display: none;">
+                            <img id="previewEditImgVariant" class="image-preview" alt="Preview">
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-2"
+                                id="removeEditImageVariant">
+                                <i class="fas fa-trash"></i> Xóa ảnh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveEditVariantBtn">
+                    <i class="fas fa-save me-2"></i>Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="d-none">
+
+{{/section }}
+{{#section "css"}}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .product-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .image-preview {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+    }
+
+    .variant-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+
+    .upload-area {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+
+    .upload-area:hover {
+        border-color: #0d6efd;
+    }
+
+    .upload-area.dragover {
+        border-color: #0d6efd;
+        background-color: #f8f9ff;
+    }
+
+    .price-text {
+        color: #198754;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+    .table img {
+        border-radius: 4px;
+    }
+</style>
+{{/section}}
+{{#section "script" }}
+<script>
+    $(document).ready(function () {
+        let currentProduct = null;
+        let currentVariant = null;
+        let editingProductId = null;
+        let editingVariantId = null;
+
+        // Hàm helper để lấy file từ input (bao gồm cả drag & drop)
+        function getFileFromInput(inputElement) {
+            const $input = $(inputElement);
+
+            // Thử lấy file từ input.files trước
+            if ($input[0].files && $input[0].files.length > 0) {
+                return $input[0].files[0];
+            }
+
+            // Nếu không có, thử lấy từ data (drag & drop fallback)
+            const draggedFile = $input.data('draggedFile');
+            if (draggedFile) {
+                return draggedFile;
+            }
+
+            return null;
+        }
+
+        // Image upload handlers
+        function setupImageUpload(uploadAreaId, fileInputId, previewId, previewImgId, removeId) {
+            const uploadArea = $(`#${uploadAreaId}`);
+            const fileInput = $(`#${fileInputId}`);
+            const preview = $(`#${previewId}`);
+            const previewImg = $(`#${previewImgId}`);
+            const removeBtn = $(`#${removeId}`);
+
+            // Xóa tất cả event listeners cũ để tránh memory leak
+            uploadArea.off('click dragover dragleave drop');
+            fileInput.off('change');
+            removeBtn.off('click');
+
+            // Hàm hiển thị ảnh preview
+            function displayImage(file) {
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        previewImg.attr('src', e.target.result);
+                        preview.show();
+                        uploadArea.hide();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Click to upload
+            uploadArea.on('click', function () {
+                fileInput.click();
+            });
+
+            // File input change
+            fileInput.on('change', function (e) {
+                const file = e.target.files[0];
+                displayImage(file);
+            });
+
+            // Remove image
+            removeBtn.on('click', function () {
+                fileInput.val('');
+                fileInput.removeData('draggedFile'); // Xóa cả dragged file
+                preview.hide();
+                uploadArea.show();
+            });
+
+            // Drag and drop events
+            uploadArea.on('dragover', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).addClass('dragover');
+            });
+
+            uploadArea.on('dragleave', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).removeClass('dragover');
+            });
+
+            uploadArea.on('drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).removeClass('dragover');
+
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type.startsWith('image/')) {
+                        // QUAN TRỌNG: Gán file vào input để có thể gửi lên server
+                        try {
+                            // Tạo FileList mới và gán vào input
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(file);
+                            fileInput[0].files = dataTransfer.files;
+
+                            // Hiển thị preview
+                            displayImage(file);
+                        } catch (error) {
+                            // Fallback cho trình duyệt không support DataTransfer
+                            console.log('DataTransfer not supported, using alternative method');
+
+                            // Chỉ hiển thị preview, file sẽ được xử lý thủ công
+                            displayImage(file);
+
+                            // Lưu file vào thuộc tính data để có thể truy cập sau
+                            fileInput.data('draggedFile', file);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Setup image uploads
+        setupImageUpload('uploadArea', 'productImage', 'imagePreview', 'previewImg', 'removeImage');
+        setupImageUpload('uploadAreaEdit', 'productImageEdit', 'imagePreviewEdit', 'previewImgEdit', 'removeImageEdit');
+        setupImageUpload('uploadAreaVariant', 'variantImage', 'imagePreviewVariant', 'previewImgVariant', 'removeImageVariant');
+        setupImageUpload('uploadEditAreaVariant', 'variantEditImage', 'imageEditPreviewVariant', 'previewEditImgVariant', 'removeEditImageVariant');
+
+        // Render functions
+        function renderProducts(products) {
+            const grid = $('#productsGrid');
+            const emptyState = $('#emptyState');
+
+            if (!products || products.length === 0) {
+                grid.hide();
+                emptyState.show();
+                return;
+            }
+
+            grid.show();
+            emptyState.hide();
+            grid.html('');
+
+            products.forEach(product => {
+                const imageUrl = product.image ? `${product.image}` : 'https://via.placeholder.com/300x200?text=No+Image';
+
+                const productCard = `
+                    <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                        <div class="card product-card h-100">
+                            <img src="${product.image}" class="card-img-top product-image" alt="${product.name}">
+                            <div class="card-body">
+                                <h5 class="card-title">${product.name}</h5>
+                                <p class="card-text price-text fs-5">${product.price.toLocaleString('vi-VN')}đ</p>
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="editProduct(${product.id})">
+                                        <i class="fas fa-edit me-1"></i>Sửa
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteProduct(${product.id})">
+                                        <i class="fas fa-trash me-1"></i>Xóa
+                                    </button>
+                                </div>
+                                <button class="btn btn-info w-100 mt-2" onclick="manageVariants(${product.id}, '${product.name}')">
+                                    <i class="fas fa-list me-2"></i>Quản lý biến thể
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.append(productCard);
+            });
+        }
+
+        function renderVariantsTable(productId) {
+            $.ajax({
+                url: '/api/products/' + productId,
+                success: function (data) {
+                    variants(data.variants);
+                }
+            });
+        }
+
+        function variants(variants) {
+            const container = $('#variantsTableContainer');
+
+            if (variants.length === 0) {
+                container.html(`
+                    <div class="text-center py-5">
+                        <i class="fas fa-box-open fs-1 text-muted mb-3"></i>
+                        <h5>Chưa có biến thể nào</h5>
+                        <p class="text-muted">Hãy thêm biến thể đầu tiên!</p>
+                    </div>
+                `);
+                return;
+            }
+
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Hình ảnh</th>
+                                <th>Tên biến thể</th>
+                                <th>Giá</th>
+                                <th width="120">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            variants.forEach(variant => {
+                const imageUrl = variant.image ? `${variant.image}` : 'https://via.placeholder.com/60x60?text=No+Image';
+                tableHtml += `
+                    <tr>
+                        <td>
+                            <img src="${imageUrl}" class="variant-image" alt="${variant.name}">
+                        </td>
+                        <td>${variant.name}</td>
+                        <td class="price-text">${variant.price.toLocaleString('vi-VN')}đ</td>
+                        <td>
+                            <button class="btn btn-outline-primary btn-sm me-1" onclick="editVariant(${variant.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteVariant(${variant.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.html(tableHtml);
+        }
+
+        // Product functions
+        window.editProduct = function (id) {
+            $.ajax({
+                url: '/api/products/' + id,
+                success: function (data) {
+                    const product = data.product;
+                    $('#productNameEdit').val(product.name);
+                    $('#productPriceEdit').val(product.price);
+                    $('#seoEdit').val(product.search);
+                    $('#productId').val(product.id);
+
+                    // Show existing image if available
+                    if (product.image) {
+                        $('#previewImgEdit').attr('src', `${product.image}`);
+                        $('#imagePreviewEdit').show();
+                        $('#uploadAreaEdit').hide();
+                    }
+
+                    $('#productEditModal').modal('show');
+                }
+            });
+        };
+
+        window.deleteProduct = function (id) {
+            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+                $.ajax({
+                    url: '/admin/products/' + id,
+                    method: 'delete',
+                    success: function () {
+                        alert('Đã xóa vĩnh viễn sản phẩm thành công');
+                        reRender();
+                    }
+                });
+            }
+        };
+
+        window.manageVariants = function (id, name) {
+            currentProduct = { id: id };
+            $('#variantModalTitle').text(`Quản lý biến thể - ${name}`);
+            $('#addVariantBtn').data('product-id', id);
+            renderVariantsTable(id);
+            $('#variantModal').modal('show');
+        };
+
+        // Variant functions
+        window.editVariant = function (id) {
+            $('#variantFormTitle').text('Chỉnh sửa biến thể');
+            $.ajax({
+                url: '/admin/variants/' + id,
+                success: function (data) {
+                    $('#variantEditName').val(data.name);
+                    $('#variantEditPrice').val(data.price);
+                    if (data.image) {
+                        $('#previewEditImgVariant').attr('src', `${data.image}`);
+                        $('#imageEditPreviewVariant').show();
+                        $('#uploadEditAreaVariant').hide();
+                    }
+                    $('#saveEditVariantBtn').data('variant-id', data.id);
+                },
+                error: function (error) {
+                    alert('lỗi hệ thống');
+                }
+            })
+            // Load variant data here
+            // For demo, just show the modal
+            $('#variantEditFormModal').modal('show');
+        };
+
+        $('#saveEditVariantBtn').on('click', function () {
+            const id = $(this).data('variant-id');
+            const name = $('#variantEditName').val();
+            const price = $('#variantEditPrice').val();
+            const image = getFileFromInput('#variantEditImage');
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('productId', productId);
+            if (image) {
+                formData.append('image', image);
+                console.log('Variant file to upload:', image.name, image.size); // Debug log
+            }
+
+            // TODO: Thay đổi URL và method theo API của bạn
+            $.ajax({
+                url: '/admin/variants/' + id,
+                method: 'PUT',
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function () {
+                    alert('Chỉnh sửa biến thể thành công!');
+                    $('#variantEditFormModal').modal('hide');
+                    renderVariantsTable(currentProduct.id);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Variant upload error:', error);
+                    alert('Có lỗi xảy ra khi lưu biến thể');
+                }
+            });
+
+
+        });
+
+
+
+        window.deleteVariant = function (id) {
+            if (confirm('Bạn có chắc chắn muốn xóa biến thể này?')) {
+                // Delete logic here
+                $.ajax({
+                    url: 'admin/variants/' + id,
+                    method: 'delete',
+                    success: function (data) {
+                        alert('xóa thành công');
+                        renderVariantsTable(currentProduct.id);
+                    },
+                    error: function (error) {
+                        alert('lỗi hệ thống');
+                    }
+                })
+
+            }
+        };
+
+        // Event handlers
+        $('#searchInput').on('input', function () {
+            const q = $(this).val().trim();
+            $.ajax({
+                url: '/api/search',
+                data: { q },
+                success: function (data) {
+                    renderProducts(data);
+                }
+            });
+        });
+
+        $('#addProductBtn').click(function () {
+            editingProductId = null;
+            $('#productModal').modal('show');
+            // Reset form
+            $('#productName').val('');
+            $('#productPrice').val('');
+            $('#seo').val('');
+            $('#productImage').val('');
+            $('#productImage').removeData('draggedFile');
+            $('#imagePreview').hide();
+            $('#uploadArea').show();
+
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('productId', productId);
+            if (image) {
+                formData.append('image', image);
+                console.log('Variant file to upload:', image.name, image.size); // Debug log
+            }
+
+            // TODO: Thay đổi URL và method theo API của bạn
+            $.ajax({
+                url: '/admin/variants',
+                method: 'POST',
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function () {
+                    alert('Lưu biến thể thành công!');
+                    $('#variantFormModal').modal('hide');
+                    renderVariantsTable(currentProduct.id);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Variant upload error:', error);
+                    alert('Có lỗi xảy ra khi lưu biến thể');
+                }
+            });
+        });
+
+        $('#saveProductBtn').click(function () {
+            const name = $('#productName').val().trim();
+            const price = parseInt($('#productPrice').val());
+            const seo = $('#seo').val();
+            const image = getFileFromInput('#productImage'); // Sử dụng helper function
+
+            if (!name) {
+                alert('Vui lòng điền đầy đủ thông tin sản phẩm!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price ?? null);
+            formData.append('search', seo);
+            if (image) {
+                formData.append('image', image);
+                console.log('File to upload:', image.name, image.size); // Debug log
+            }
+
+            $.ajax({
+                url: '/admin/products',
+                method: "POST",
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function () {
+                    alert('Thêm thành công');
+                    $('#productModal').modal('hide');
+                    reRender();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Upload error:', error);
+                    alert('Có lỗi xảy ra khi thêm sản phẩm');
+                }
+            });
+        });
+
+        $('#saveEditProductBtn').click(function () {
+            const name = $('#productNameEdit').val().trim();
+            const price = parseInt($('#productPriceEdit').val()) || 0;
+            const seo = $('#seoEdit').val();
+            const image = getFileFromInput('#productImageEdit'); // Sử dụng helper function
+            const id = $('#productId').val();
+
+            if (!name || price <= 0) {
+                alert('Vui lòng điền đầy đủ thông tin sản phẩm!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('search', seo);
+            if (image) {
+                formData.append('image', image);
+                console.log('File to upload:', image.name, image.size); // Debug log
+            }
+
+            $.ajax({
+                url: '/admin/products/' + id,
+                method: "PUT",
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function () {
+                    alert('Sửa thành công');
+                    $('#productEditModal').modal('hide');
+                    reRender();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Upload error:', error);
+                    alert('Có lỗi xảy ra khi cập nhật sản phẩm');
+                }
+            });
+        });
+
+        $('#addVariantBtn').click(function () {
+
+            editingVariantId = null;
+            $('#variantFormTitle').text('Thêm biến thể mới');
+            $('#variantName').val('');
+            $('#variantPrice').val('');
+            $('#variantImage').val('');
+            $('#variantImage').removeData('draggedFile');
+            $('#imagePreviewVariant').hide();
+            $('#uploadAreaVariant').show();
+            $('#variantFormModal').modal('show');
+        });
+
+        $('#saveVariantBtn').click(function () {
+            const productId = $('#addVariantBtn').data('product-id');
+            const name = $('#variantName').val().trim();
+            const price = parseInt($('#variantPrice').val()) || 0;
+            const image = getFileFromInput('#variantImage'); // Sử dụng helper function
+
+
+
+            if (!name || price <= 0) {
+                alert('Vui lòng điền đầy đủ thông tin biến thể!');
+                return;
+            }
+
+            // Tạo FormData để gửi cả file và data
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('productId', productId);
+            if (image) {
+                formData.append('image', image);
+                console.log('Variant file to upload:', image.name, image.size); // Debug log
+            }
+
+            // TODO: Thay đổi URL và method theo API của bạn
+            $.ajax({
+                url: '/admin/variants',
+                method: 'POST',
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function () {
+                    alert('Lưu biến thể thành công!');
+                    $('#variantFormModal').modal('hide');
+                    renderVariantsTable(currentProduct.id);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Variant upload error:', error);
+                    alert('Có lỗi xảy ra khi lưu biến thể');
+                }
+            });
+        });
+
+        // Import/Export handlers
+        $('#importBtn').click(function () {
+            $('#fileInput').click();
+        });
+
+        $('#fileInput').change(function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                $.ajax({
+                    url: '/import-excel',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function () {
+                        alert('Import thành công');
+                        reRender();
+                    },
+                    error: function () {
+                        alert('Import thất bại');
+                    }
+                });
+            }
+        });
+
+        $('#exportBtn').click(function () {
+            window.location.href = '/export/download-excel';
+        });
+
+        function reRender() {
+            const q = $('#searchInput').val().trim();
+            $.ajax({
+                url: '/api/search',
+                data: {
+                    q
+                },
+                success: function (data) {
+                    renderProducts(data);
+                }
+            });
+        }
+        reRender();
+    });
+</script>
+{{/section }}

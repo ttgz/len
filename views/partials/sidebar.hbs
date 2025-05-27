@@ -1,0 +1,35 @@
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="#" class="sidebar-brand">
+            <i class="fas fa-store me-2"></i>
+            Len Store
+        </a>
+    </div>
+    <nav class="sidebar-menu">
+        <a href="#" class="menu-item {{#if (eq currentPage 'dashboard')}}active{{/if}}" data-page="dashboard">
+            <i class="fas fa-tachometer-alt"></i>
+            Dashboard
+        </a>
+        <a href="/admin/products" class="menu-item {{#if (eq currentPage 'products')}}active{{/if}}" data-page="products">
+            <i class="fas fa-box"></i>
+            Quản lý Sản phẩm
+        </a>
+        <a href="/admin/orders" class="menu-item {{#if (eq currentPage 'orders')}}active{{/if}}" data-page="orders">
+            <i class="fas fa-shopping-cart"></i>
+            Quản lý Đơn hàng
+        </a>
+        <a href="#" class="menu-item {{#if (eq currentPage 'customers')}}active{{/if}}" data-page="customers">
+            <i class="fas fa-users"></i>
+            Khách hàng
+        </a>
+        <a href="#" class="menu-item {{#if (eq currentPage 'reports')}}active{{/if}}" data-page="reports">
+            <i class="fas fa-chart-bar"></i>
+            Báo cáo
+        </a>
+        <a href="#" class="menu-item {{#if (eq currentPage 'settings')}}active{{/if}}" data-page="settings">
+            <i class="fas fa-cogs"></i>
+            Cài đặt
+        </a>
+    </nav>
+</div>

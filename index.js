@@ -3,8 +3,8 @@ require('dotenv').config();
 const app = express();
 const path = require('path')
 const port = 3000;
-const routerSearch = require('./routers/search');
-const routerProduct = require('./routers/products');
+const routerSearch = require('./routers/api/search');
+const routerProduct = require('./routers/api/products');
 const sequelize = require('./models');
 const Product = require('./models/product');
 const Variant = require('./models/variant');
@@ -14,8 +14,31 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const Admin = require('./models/admin');
 const authRouter = require('./routers/admin/auth');
-app.set('view engine', 'ejs');
+const expressLayouts = require('express-ejs-layouts');
+const exphbs = require('express-handlebars');
 
+
+
+app.set('view engine', 'hbs');
+
+
+app.engine('hbs', exphbs.engine({
+    extname: '.hbs',
+    defaultLayout: 'main', // layout mặc định: views/layouts/main.hbs
+    layoutsDir: 'views/layouts',
+    partialsDir: 'views/partials',
+    helpers: {
+        eq: function (a, b) {
+            return a === b;
+        },
+
+        section: function (name, options) {
+            if (!this._sections) this._sections = {};
+            this._sections[name] = options.fn(this);
+            return null;
+        }
+    }
+}));
 app.use(session({
     secret: 'dong',  // đổi thành chuỗi bí mật riêng của bạn
     resave: false,
@@ -41,14 +64,16 @@ app.get('/env.js', (req, res) => {
         API_URL: "${process.env.APP_URL}"
     };`);
 });
-app.get('/variants/search', (req, res) => routerSearch.searchVariants(req, res));
-app.get('/products/:id', (req, res) => routerProduct.variantsByProductId(req, res));
-app.get('/products', (req, res) => routerProduct.allProducts(req, res));
-app.get('/search', (req, res) => routerSearch.searchRouter(req, res));
-app.get('/', (req, res) => {
-    res.render('index');
-});
 
+app.get('/api/variants/search', (req, res) => routerSearch.searchVariants(req, res));
+app.get('/api/products/:id', (req, res) => routerProduct.variantsByProductId(req, res));
+app.get('/api/products', (req, res) => routerProduct.allProducts(req, res));
+app.get('/api/search', (req, res) => routerSearch.searchRouter(req, res));
+app.get('/', (req, res) => {
+    res.render('index', {
+        layout: false,
+    });
+});
 
 app.use('/admin', authRouter);
 

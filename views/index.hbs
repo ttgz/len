@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="public/images/favicon.ico">
     <title>Danh sách sản phẩm</title>
     <style>
         * {
@@ -461,14 +462,14 @@
         integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
     <script>
         $(document).ready(async function () {
-            const products = await get('/products');
+            const products = await get('api/products');
             renderProducts(products);
         });
 
         $('#searchInput').on('input', function () {
             const key = ($(this).val()).trim();
             $.ajax({
-                url: '/search',
+                url: '/api/search',
                 data: {
                     q: key
                 },
@@ -516,7 +517,7 @@
             const key = $(this).val().trim();
             const productId = $(this).data('product-id');
             $.ajax({
-                url: '/variants/search',
+                url: 'api/variants/search',
                 data: {
                     q: key,
                     id: productId
@@ -540,7 +541,7 @@
         // Show product details modal
         async function showProductDetails(productId) {
             $('#variantSearchInput').data('product-id', productId);
-            const data = await get('/products/' + productId);
+            const data = await get('/api/products/' + productId);
             const product = data.product;
             if (!product) return;
 
