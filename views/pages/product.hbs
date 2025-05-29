@@ -30,6 +30,9 @@
                 <button class="btn btn-success" id="importVariantsBtn">
                     <i class="fas fa-upload me-2"></i>Import Excel Biến thể
                 </button>
+                <button class="btn btn-warning" id="exportVariantsBtn">
+                    <i class="fas fa-upload me-2"></i>Export Excel Biến thể
+                </button>
             </div>
         </div>
     </div>
@@ -600,16 +603,39 @@
         };
 
         window.deleteProduct = function (id) {
-            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-                $.ajax({
-                    url: '/admin/products/' + id,
-                    method: 'delete',
-                    success: function () {
-                        alert('Đã xóa vĩnh viễn sản phẩm thành công');
-                        reRender();
-                    }
-                });
-            }
+            Swal.fire({
+                title: "Bạn chắc chắn xóa sản phẩm này?",
+                text: "Lưu ý: Bạn sẽ xóa vĩnh viễn sản phẩm này và tất cả biến thể của sản phẩm!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Vâng, hãy xóa!",
+                cancelButtonText: "Hủy"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/admin/products/' + id,
+                        method: 'delete',
+                        success: function () {
+                            Swal.fire({
+                                title: "Đã xóa!",
+                                text: "Xóa thành công sản phẩm và biến thể của sản phẩm này.",
+                                icon: "success"
+                            });
+                            reRender();
+                        },
+                        error: function () {
+                            Swal.fire({
+                                title: "Lỗi!",
+                                text: "Đã xảy ra lỗi trong quá trình xóa sản phẩm.",
+                                icon: "error"
+                            });
+                        }
+                    });
+                }
+            });
+
         };
 
         window.manageVariants = function (id, name) {
@@ -683,21 +709,40 @@
 
 
         window.deleteVariant = function (id) {
-            if (confirm('Bạn có chắc chắn muốn xóa biến thể này?')) {
-                // Delete logic here
-                $.ajax({
-                    url: 'admin/variants/' + id,
-                    method: 'delete',
-                    success: function (data) {
-                        alert('xóa thành công');
-                        renderVariantsTable(currentProduct.id);
-                    },
-                    error: function (error) {
-                        alert('lỗi hệ thống');
-                    }
-                })
+            Swal.fire({
+                title: "Bạn chắc chắn xóa biến thể này?",
+                text: "Bạn sẽ không thể hoàn tác dữ liệu nếu đã xóa!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Vâng, hãy xóa!",
+                cancelButtonText: "Hủy"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/admin/variants/' + id,
+                        method: 'delete',
+                        success: function (data) {
+                            Swal.fire({
+                                title: "Đã xóa!",
+                                icon: "success",
+                                draggable: true
+                            });
+                            renderVariantsTable(currentProduct.id);
+                        },
+                        error: function (error) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Lỗi hệ thống!",
+                                text: "Hệ thống đang bị lỗi, vui lòng thử lại sau!",
+                                footer: '<a href="#">Why do I have this issue?</a>'
+                            });
+                        }
+                    })
+                }
+            });
 
-            }
         };
 
         // Event handlers
@@ -760,7 +805,11 @@
             const image = getFileFromInput('#productImage'); // Sử dụng helper function
 
             if (!name) {
-                alert('Vui lòng điền đầy đủ thông tin sản phẩm!');
+                Swal.fire({
+                    title: "Vui lòng nhập đầy đủ thông tin sản phẩm!",
+                    icon: "warning",
+                    draggable: true
+                });
                 return;
             }
 
@@ -770,7 +819,7 @@
             formData.append('search', seo);
             if (image) {
                 formData.append('image', image);
-                console.log('File to upload:', image.name, image.size); // Debug log
+
             }
 
             $.ajax({
@@ -780,13 +829,21 @@
                 processData: false,
                 data: formData,
                 success: function () {
-                    alert('Thêm thành công');
+                    Swal.fire({
+                        title: "Thêm sản phẩm thành công!",
+                        icon: "success",
+                        draggable: true
+                    });
                     $('#productModal').modal('hide');
                     reRender();
                 },
                 error: function (xhr, status, error) {
                     console.error('Upload error:', error);
-                    alert('Có lỗi xảy ra khi thêm sản phẩm');
+                    Swal.fire({
+                        title: "Có lỗi xảy trong quá trình thêm sản phẩm! Vui lòng kiểm tra lại dữ liệu!",
+                        icon: "error",
+                        draggable: true
+                    });
                 }
             });
         });
@@ -799,7 +856,11 @@
             const id = $('#productId').val();
 
             if (!name || price <= 0) {
-                alert('Vui lòng điền đầy đủ thông tin sản phẩm!');
+                Swal.fire({
+                    title: "Vui lòng nhập đầy đủ thông tin sản phẩm!",
+                    icon: "warning",
+                    draggable: true
+                });
                 return;
             }
 
@@ -820,13 +881,20 @@
                 processData: false,
                 data: formData,
                 success: function () {
-                    alert('Sửa thành công');
+                    Swal.fire({
+                        title: "Cập nhật sản phẩm thành công!",
+                        icon: "success",
+                        draggable: true
+                    });
                     $('#productEditModal').modal('hide');
                     reRender();
                 },
                 error: function (xhr, status, error) {
-                    console.error('Upload error:', error);
-                    alert('Có lỗi xảy ra khi cập nhật sản phẩm');
+                    Swal.fire({
+                        title: "Có lỗi xảy trong quá trình cập nhật sản phẩm!",
+                        icon: "error",
+                        draggable: true
+                    });
                 }
             });
         });
@@ -853,7 +921,11 @@
 
 
             if (!name || price <= 0) {
-                alert('Vui lòng điền đầy đủ thông tin biến thể!');
+                Swal.fire({
+                    title: "Vui lòng nhập đầy đủ thông tin biến thể!",
+                    icon: "warning",
+                    draggable: true
+                });
                 return;
             }
 
@@ -864,7 +936,7 @@
             formData.append('productId', productId);
             if (image) {
                 formData.append('image', image);
-                console.log('Variant file to upload:', image.name, image.size); // Debug log
+
             }
 
             // TODO: Thay đổi URL và method theo API của bạn
@@ -875,13 +947,20 @@
                 processData: false,
                 data: formData,
                 success: function () {
-                    alert('Lưu biến thể thành công!');
+                    Swal.fire({
+                        title: "Thêm thông tin biến thể thành công!",
+                        icon: "success",
+                        draggable: true
+                    });
                     $('#variantFormModal').modal('hide');
                     renderVariantsTable(currentProduct.id);
                 },
                 error: function (xhr, status, error) {
-                    console.error('Variant upload error:', error);
-                    alert('Có lỗi xảy ra khi lưu biến thể');
+                    Swal.fire({
+                        title: "Có lỗi xảy trong quá trình thêm biến thể!",
+                        icon: "error",
+                        draggable: true
+                    });
                 }
             });
         });
@@ -904,11 +983,21 @@
                     processData: false,
                     contentType: false,
                     success: function () {
-                        alert('Import thành công');
+                        Swal.fire({
+                            title: "Thêm nhiều sản phẩm thành công!",
+                            icon: "success",
+                            draggable: true
+                        });
                         reRender();
                     },
                     error: function () {
-                        alert('Import thất bại');
+                        console.error('Upload error:', error);
+                        Swal.fire({
+                            title: "Lỗi!",
+                            text: "Thêm nhiều sản phẩm thất bại",
+                            icon: "error",
+                            draggable: true
+                        });
                     }
                 });
             }
@@ -931,11 +1020,20 @@
                     processData: false,
                     contentType: false,
                     success: function () {
-                        alert('Import thành công');
+                        Swal.fire({
+                            title: "Thêm nhiều biến thể thành công!",
+                            icon: "success",
+                            draggable: true
+                        });
                         reRender();
                     },
                     error: function () {
-                        alert('Import thất bại');
+                        Swal.fire({
+                            title: "Lỗi!",
+                            text: "Thêm nhiều sản phẩm thất bại",
+                            icon: "error",
+                            draggable: true
+                        });
                     }
                 });
             }
@@ -943,6 +1041,10 @@
 
         $('#exportBtn').click(function () {
             window.location.href = '/export/download-excel';
+        });
+
+        $('#exportVariantsBtn').click(function () {
+            window.location.href = '/export/download-excel-variants';
         });
 
         function reRender() {

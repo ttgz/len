@@ -29,6 +29,7 @@ router.get('/', isAdminAuthenticated, (req, res) => {
 })
 router.use('/variants', routerVariant);
 router.use('/', routerProduct);
+
 router.post('/login', async (req, res, next) => {
     const { name, password } = req.body;
 
