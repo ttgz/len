@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const Variant = require('../../models/variant');
 const Product = require('../../models/product');
 const productsRouter = require('./products');
+
 async function searchRouter(req, res) {
     const keyword = req.query.q;
     if (!keyword) {
@@ -15,6 +16,7 @@ async function searchRouter(req, res) {
         const results = await Product.findAll({
             where: {
                 [Op.or]: [
+                    { slug: { [Op.like]: `%${keyword}%` } },
                     { name: { [Op.like]: `%${keyword}%` } },
                     { search: { [Op.like]: `%${keyword}%` } }
                 ]
@@ -37,13 +39,14 @@ async function searchVariants(req, res) {
     try {
         const results = await Variant.findAll({
             where: {
-                name: { [Op.like]: `%${keyword}%` },
+                [Op.or]: [
+                    { slug: { [Op.like]: `%${keyword}%` } },
+                    { name: { [Op.like]: `%${keyword}%` } },
+                ],
                 product_id: productId
-
-            },
+            }
         }
         );
-
         res.status(200).json(results);
     } catch (err) {
         console.error(err);

@@ -1,54 +1,53 @@
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <!-- Search and Filters -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" id="searchInput" class="form-control"
-                            placeholder="Tìm kiếm sản phẩm, thương hiệu...">
-                    </div>
+<!-- Header -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <!-- Search and Filters -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control"
+                        placeholder="Tìm kiếm sản phẩm, thương hiệu...">
                 </div>
             </div>
+        </div>
 
-            <!-- Action Buttons -->
-            <div class="d-flex flex-wrap gap-2">
-                <button class="btn btn-primary" id="addProductBtn">
-                    <i class="fas fa-plus me-2"></i>Thêm sản phẩm
-                </button>
-                <button class="btn btn-success" id="importBtn">
-                    <i class="fas fa-upload me-2"></i>Import Excel
-                </button>
-                <button class="btn btn-warning" id="exportBtn">
-                    <i class="fas fa-download me-2"></i>Export Excel
-                </button>
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary" id="addProductBtn">
+                <i class="fas fa-plus me-2"></i>Thêm sản phẩm
+            </button>
+            <button class="btn btn-success" id="importBtn">
+                <i class="fas fa-upload me-2"></i>Import Excel
+            </button>
+            <button class="btn btn-warning" id="exportBtn">
+                <i class="fas fa-download me-2"></i>Export Excel
+            </button>
 
-                <button class="btn btn-success" id="importVariantsBtn">
-                    <i class="fas fa-upload me-2"></i>Import Excel Biến thể
-                </button>
-                <button class="btn btn-warning" id="exportVariantsBtn">
-                    <i class="fas fa-upload me-2"></i>Export Excel Biến thể
-                </button>
-            </div>
+            <button class="btn btn-success" id="importVariantsBtn">
+                <i class="fas fa-upload me-2"></i>Import Excel Biến thể
+            </button>
+            <button class="btn btn-warning" id="exportVariantsBtn">
+                <i class="fas fa-upload me-2"></i>Export Excel Biến thể
+            </button>
         </div>
     </div>
-
-    <!-- Products Grid -->
-    <div id="productsGrid" class="row">
-        <!-- Products will be rendered here -->
-    </div>
-
-    <!-- Empty State -->
-    <div id="emptyState" class="empty-state" style="display: none;">
-        <i class="fas fa-box fs-1 mb-3"></i>
-        <h4>Không tìm thấy sản phẩm nào</h4>
-        <p class="text-muted">Hãy thử thay đổi từ khóa tìm kiếm hoặc thêm sản phẩm mới</p>
-    </div>
 </div>
+
+<!-- Products Grid -->
+<div id="productsGrid" class="row">
+    <!-- Products will be rendered here -->
+</div>
+
+<!-- Empty State -->
+<div id="emptyState" class="empty-state" style="display: none;">
+    <i class="fas fa-box fs-1 mb-3"></i>
+    <h4>Không tìm thấy sản phẩm nào</h4>
+    <p class="text-muted">Hãy thử thay đổi từ khóa tìm kiếm hoặc thêm sản phẩm mới</p>
+</div>
+
 
 {{#section "bottom" }}
 <!-- Product Modal -->

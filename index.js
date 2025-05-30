@@ -16,6 +16,7 @@ const Admin = require('./models/admin');
 const authRouter = require('./routers/admin/auth');
 const expressLayouts = require('express-ejs-layouts');
 const exphbs = require('express-handlebars');
+const mainRouterApi = require('./routers/api/index');
 
 
 
@@ -67,6 +68,8 @@ app.get('/env.js', (req, res) => {
     };`);
 });
 
+
+app.use('/api', mainRouterApi);
 app.get('/api/variants/search', (req, res) => routerSearch.searchVariants(req, res));
 app.get('/api/products/:id', (req, res) => routerProduct.variantsByProductId(req, res));
 app.get('/api/products', (req, res) => routerProduct.allProducts(req, res));
