@@ -4,9 +4,11 @@ const { Op } = require('sequelize');
 const Variant = require('../../models/variant');
 const Product = require('../../models/product');
 const productsRouter = require('./products');
+const removeAccents = require('remove-accents');
 
 async function searchRouter(req, res) {
-    const keyword = req.query.q;
+    const keyword = removeAccents(req.query.q);
+    console.log(keyword);
     if (!keyword) {
         productsRouter.allProducts(req, res);
         return;
@@ -33,8 +35,9 @@ async function searchRouter(req, res) {
 }
 
 async function searchVariants(req, res) {
-    const keyword = req.query.q;
+    const keyword = removeAccents(req.query.q);
     const productId = req.query.id;
+
 
     try {
         const results = await Variant.findAll({
