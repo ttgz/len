@@ -36,12 +36,14 @@ router.post('/login', async (req, res, next) => {
     const admin = await Admin.findOne({ where: { name } });
 
     if (!admin) {
-        return res.status(401).json({ error: 'Sai tài khoản' });
+        req.session.message = "Sai mật khẩu";
+        return res.redirect('/admin/login');
     }
 
     const match = await bcrypt.compare(password, admin.password);
     if (!match) {
-        return res.status(401).json({ error: 'Sai mật khẩu' });
+        req.session.message = "Sai mật khẩu";
+        return res.redirect('/admin/login');
     }
 
     // Lưu session
@@ -59,8 +61,11 @@ router.get('/logout', (req, res) => {
 });
 
 router.get('/login', (req, res) => {
+    const message = req.session.message;
+     delete req.session.message;
     res.render('admin/login', {
-        layout: false
+        layout: false,
+        message
     });
 })
 

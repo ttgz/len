@@ -267,9 +267,10 @@
                     <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
                     <span class="input-icon">🔒</span>
                 </div>
+                {{#if message}}
+                <div class="alert alert-danger">{{message}}</div>
+                {{/if  }}
             </div>
-
-
 
             <button type="submit" class="login-btn">
                 Đăng Nhập

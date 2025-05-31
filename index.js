@@ -2,19 +2,13 @@ const express = require('express');
 require('dotenv').config();
 const app = express();
 const path = require('path')
-const port = 3000;
 const routerSearch = require('./routers/api/search');
 const routerProduct = require('./routers/api/products');
 const sequelize = require('./models');
-const Product = require('./models/product');
-const Variant = require('./models/variant');
 const importRouter = require('./routers/admin/import_excel');
 const exportRouter = require('./routers/admin/export_excel');
 const session = require('express-session');
-const bcrypt = require('bcrypt');
-const Admin = require('./models/admin');
 const authRouter = require('./routers/admin/auth');
-const expressLayouts = require('express-ejs-layouts');
 const exphbs = require('express-handlebars');
 const mainRouterApi = require('./routers/api/index');
 
